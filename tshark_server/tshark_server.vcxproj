@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{f7663e8c-2e73-45b5-8832-6f171fcd8c3e}</ProjectGuid>
+    <RootNamespace>tsharkserver</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>E:\Easy_tshark\tshark_server\tshark_server\third_library;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>E:\Easy_tshark\tshark_server\tshark_server\third_library;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="ip2region_util.cpp" />
+    <ClCompile Include="third_library\ip2region\xdb_bench.cc" />
+    <ClCompile Include="third_library\ip2region\xdb_search.cc" />
+    <ClCompile Include="third_library\loguru\loguru.cpp" />
+    <ClCompile Include="third_library\sqlite3\sqlite3.c" />
+    <ClCompile Include="tshark_manager.cpp" />
+    <ClCompile Include="tshark_server.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ip2region_util.h" />
+    <ClInclude Include="third_library\httplib\httplib.h" />
+    <ClInclude Include="third_library\ip2region\xdb_bench.h" />
+    <ClInclude Include="third_library\ip2region\xdb_search.h" />
+    <ClInclude Include="third_library\loguru\loguru.hpp" />
+    <ClInclude Include="third_library\rapidjson\allocators.h" />
+    <ClInclude Include="third_library\rapidjson\cursorstreamwrapper.h" />
+    <ClInclude Include="third_library\rapidjson\document.h" />
+    <ClInclude Include="third_library\rapidjson\encodedstream.h" />
+    <ClInclude Include="third_library\rapidjson\encodings.h" />
+    <ClInclude Include="third_library\rapidjson\error\en.h" />
+    <ClInclude Include="third_library\rapidjson\error\error.h" />
+    <ClInclude Include="third_library\rapidjson\filereadstream.h" />
+    <ClInclude Include="third_library\rapidjson\filewritestream.h" />
+    <ClInclude Include="third_library\rapidjson\fwd.h" />
+    <ClInclude Include="third_library\rapidjson\internal\biginteger.h" />
+    <ClInclude Include="third_library\rapidjson\internal\clzll.h" />
+    <ClInclude Include="third_library\rapidjson\internal\diyfp.h" />
+    <ClInclude Include="third_library\rapidjson\internal\dtoa.h" />
+    <ClInclude Include="third_library\rapidjson\internal\ieee754.h" />
+    <ClInclude Include="third_library\rapidjson\internal\itoa.h" />
+    <ClInclude Include="third_library\rapidjson\internal\meta.h" />
+    <ClInclude Include="third_library\rapidjson\internal\pow10.h" />
+    <ClInclude Include="third_library\rapidjson\internal\regex.h" />
+    <ClInclude Include="third_library\rapidjson\internal\stack.h" />
+    <ClInclude Include="third_library\rapidjson\internal\strfunc.h" />
+    <ClInclude Include="third_library\rapidjson\internal\strtod.h" />
+    <ClInclude Include="third_library\rapidjson\internal\swap.h" />
+    <ClInclude Include="third_library\rapidjson\istreamwrapper.h" />
+    <ClInclude Include="third_library\rapidjson\memorybuffer.h" />
+    <ClInclude Include="third_library\rapidjson\memorystream.h" />
+    <ClInclude Include="third_library\rapidjson\msinttypes\inttypes.h" />
+    <ClInclude Include="third_library\rapidjson\msinttypes\stdint.h" />
+    <ClInclude Include="third_library\rapidjson\ostreamwrapper.h" />
+    <ClInclude Include="third_library\rapidjson\pointer.h" />
+    <ClInclude Include="third_library\rapidjson\prettywriter.h" />
+    <ClInclude Include="third_library\rapidjson\rapidjson.h" />
+    <ClInclude Include="third_library\rapidjson\reader.h" />
+    <ClInclude Include="third_library\rapidjson\schema.h" />
+    <ClInclude Include="third_library\rapidjson\stream.h" />
+    <ClInclude Include="third_library\rapidjson\stringbuffer.h" />
+    <ClInclude Include="third_library\rapidjson\uri.h" />
+    <ClInclude Include="third_library\rapidjson\writer.h" />
+    <ClInclude Include="third_library\rapidxml\rapidxml.hpp" />
+    <ClInclude Include="third_library\rapidxml\rapidxml_iterators.hpp" />
+    <ClInclude Include="third_library\rapidxml\rapidxml_print.hpp" />
+    <ClInclude Include="third_library\rapidxml\rapidxml_utils.hpp" />
+    <ClInclude Include="third_library\sqlite3\sqlite3.h" />
+    <ClInclude Include="tshark_datatype.h" />
+    <ClInclude Include="tshark_manager.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="third_library\ip2region\.DS_Store" />
+    <None Include="third_library\ip2region\ip2region.xdb" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
