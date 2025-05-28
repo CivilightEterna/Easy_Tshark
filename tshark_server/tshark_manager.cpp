@@ -1,10 +1,11 @@
-//
-// Created by xuanyuan on 2025/2/16.
-//
 
 #include "tshark_manager.h"
 #include "third_library/loguru/loguru.hpp"
-
+#include <set>
+#ifdef _WIN32
+#define popen _popen
+#define pclose _pclose
+#endif // _WIN32
 
 TsharkManager::TsharkManager(std::string workDir) {
     this->tsharkPath = "D:/wireshark/tshark";
@@ -16,6 +17,57 @@ TsharkManager::~TsharkManager() {
     ip2RegionUtil.uninit();
 }
 
+std::vector<AdapterInfo>TsharkManager::getNetworkAdapters() {
+//è¿‡æ»¤æ‰è™šæ‹Ÿç½‘å¡
+    std::set<std::string>specialInterfaces = { "sshdump","ciscodump","udpdump","randpkt" };
+    //æšä¸¾åˆ°çš„ç½‘å¡åˆ—è¡¨
+    std::vector<AdapterInfo> interfaces;
+	//å‡†å¤‡ä¸€ä¸ªbufferç¼“å†²åŒºï¼Œæ¥è¯»å–tshark -Dæ¯ä¸€è¡Œçš„å†…å®¹
+    char buffer[256] = { 0 };
+    std::string result;
+	//å¯åŠ¨tsharkå‘½ä»¤
+	std::string cmd = tsharkPath + " -D";
+	FILE* pipe = _popen(cmd.c_str(), "r");
+    if (!pipe) {
+		throw std::runtime_error("Failed to run tshark command !");
+    }
+    while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+        result += buffer;
+	}
+	//è§£ætsharkçš„è¾“å‡ºç»“æœ,è¾“å‡ºç»“æœçš„æ ¼å¼æ˜¯ï¼š1.\Devices\NPF_{xxxx}(ç½‘å¡æè¿°)
+	std::istringstream stream(result);
+    std::string line;
+	int index = 1;
+    while (std::getline(stream, line)) {
+        //é€šè¿‡ç©ºæ ¼æ‹†åˆ†å­—ç¬¦
+		int startPos = line.find(' ');
+        if (startPos != std::string::npos) {
+            int endPos = line.find(' ', startPos + 1);
+            std::string interfaceName;
+            if (endPos != std::string::npos) {
+				interfaceName = line.substr(startPos + 1, endPos - startPos - 1);
+            }
+            else {
+				interfaceName = line.substr(startPos + 1);
+            }
+            //è¿‡æ»¤æ‰ç‰¹æ®Šçš„ç½‘å¡
+            if (specialInterfaces.find(interfaceName) != specialInterfaces.end()) {
+                continue;
+            }
+            AdapterInfo adapterInfo;
+			adapterInfo.name = interfaceName;
+			adapterInfo.id = index++;
+            //å®šä½åˆ°æ‹¬å·ï¼ŒæŠŠæ‹¬å·é‡Œé¢çš„å¤‡æ³¨å†…å®¹æå–å‡ºæ¥
+            if(line.find("(") !=std::string::npos && line.find(")") != std::string::npos){
+                adapterInfo.remark = line.substr(line.find("(") + 1, line.find(")") - line.find("(") - 1);//å°±æ˜¯ä»å·¦æ‹¬å·åé¢ç¬¬ä¸€ä¸ªå­—ç¬¦å¼€å§‹ï¼Œæˆªå–åˆ°å³æ‹¬å·å‰çš„æ‰€æœ‰å­—ç¬¦ã€‚
+            }
+			interfaces.push_back(adapterInfo);
+
+        }
+    }
+	_pclose(pipe);
+	return interfaces;
+}
 bool TsharkManager::analysisFile(std::string filePath) {
 
     std::vector<std::string> tsharkArgs = {
@@ -48,38 +100,39 @@ bool TsharkManager::analysisFile(std::string filePath) {
 
     FILE* pipe = _popen(command.c_str(), "r");
     if (!pipe) {
-        std::cerr << "Failed to run tshark command!" << std::endl;
+        //std::cerr << "Failed to run tshark command!" << std::endl;
+		LOG_F(ERROR, "æ— æ³•è¿è¡Œ tshark å‘½ä»¤: %s", command.c_str());    
         return false;
     }
 
     char buffer[1024];
 
-    // µ±Ç°´¦ÀíµÄ±¨ÎÄÔÚÎÄ¼şÖĞµÄÆ«ÒÆ£¬µÚÒ»¸ö±¨ÎÄµÄÆ«ÒÆ¾ÍÊÇÈ«¾ÖÎÄ¼şÍ·24(Ò²¾ÍÊÇsizeof(PcapHeader))×Ö½Ú
+    // å½“å‰å¤„ç†çš„æŠ¥æ–‡åœ¨æ–‡ä»¶ä¸­çš„åç§»ï¼Œç¬¬ä¸€ä¸ªæŠ¥æ–‡çš„åç§»å°±æ˜¯å…¨å±€æ–‡ä»¶å¤´24(ä¹Ÿå°±æ˜¯sizeof(PcapHeader))å­—èŠ‚
     uint32_t file_offset = sizeof(PcapHeader);
     while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
         std::shared_ptr<Packet> packet = std::make_shared<Packet>();
         parseLine(buffer, packet);
 
-        // ¼ÆËãµ±Ç°±¨ÎÄµÄÆ«ÒÆ£¬È»ºó¼ÇÂ¼ÔÚPacket¶ÔÏóÖĞ
+        // è®¡ç®—å½“å‰æŠ¥æ–‡çš„åç§»ï¼Œç„¶åè®°å½•åœ¨Packetå¯¹è±¡ä¸­
         packet->file_offset = file_offset + sizeof(PacketHeader);
 
-        // ¸üĞÂÆ«ÒÆÓÎ±ê
+        // æ›´æ–°åç§»æ¸¸æ ‡
         file_offset = file_offset + sizeof(PacketHeader) + packet->cap_len;
 
-        // »ñÈ¡IPµØÀíÎ»ÖÃ
+        // è·å–IPåœ°ç†ä½ç½®
         packet->src_location = ip2RegionUtil.getIpLocation(packet->src_ip);
         packet->dst_location = ip2RegionUtil.getIpLocation(packet->dst_ip);
 
-        // ½«·ÖÎöµÄÊı¾İ°ü²åÈë±£´æÆğÀ´
+        // å°†åˆ†æçš„æ•°æ®åŒ…æ’å…¥ä¿å­˜èµ·æ¥
         allPackets.insert(std::make_pair<>(packet->frame_number, packet));
     }
 
     _pclose(pipe);
 
-    // ¼ÇÂ¼µ±Ç°·ÖÎöµÄÎÄ¼şÂ·¾¶
+    // è®°å½•å½“å‰åˆ†æçš„æ–‡ä»¶è·¯å¾„
     currentFilePath = filePath;
 
-    LOG_F(INFO, "·ÖÎöÍê³É£¬Êı¾İ°ü×ÜÊı£º%d", allPackets.size());
+    LOG_F(INFO, "åˆ†æå®Œæˆï¼Œæ•°æ®åŒ…æ€»æ•°ï¼š%d", allPackets.size());
 
     return true;
 }
@@ -90,7 +143,7 @@ void TsharkManager::printAllPackets() {
 
         std::shared_ptr<Packet> packet = pair.second;
 
-        // ¹¹½¨JSON¶ÔÏó
+        // æ„å»ºJSONå¯¹è±¡
         rapidjson::Document pktObj;
         rapidjson::Document::AllocatorType& allocator = pktObj.GetAllocator();
         pktObj.SetObject();
@@ -111,12 +164,12 @@ void TsharkManager::printAllPackets() {
         pktObj.AddMember("cap_len", packet->cap_len, allocator);
         pktObj.AddMember("len", packet->len, allocator);
 
-        // ĞòÁĞ»¯Îª JSON ×Ö·û´®
+        // åºåˆ—åŒ–ä¸º JSON å­—ç¬¦ä¸²
         rapidjson::StringBuffer buffer;
         rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
         pktObj.Accept(writer);
 
-        // ´òÓ¡JSONÊä³ö
+        // æ‰“å°JSONè¾“å‡º
         std::cout << buffer.GetString() << std::endl;
     }
 
@@ -130,11 +183,11 @@ bool TsharkManager::parseLine(std::string line, std::shared_ptr<Packet> packet) 
     std::string field;
     std::vector<std::string> fields;
 
-    while (std::getline(ss, field, '\t')) {  // ¼ÙÉè×Ö¶ÎÓÃ tab ·Ö¸ô
+    while (std::getline(ss, field, '\t')) {  // å‡è®¾å­—æ®µç”¨ tab åˆ†éš”
         fields.push_back(field);
     }
 
-    // ×Ö¶ÎË³Ğò£º
+    // å­—æ®µé¡ºåºï¼š
     // 0: frame.number
     // 1: frame.time_epoch
     // 2: frame.len
@@ -180,29 +233,32 @@ bool TsharkManager::parseLine(std::string line, std::shared_ptr<Packet> packet) 
 
 bool TsharkManager::getPacketHexData(uint32_t frameNumber, std::vector<unsigned char>& data) {
 
-    // »ñÈ¡Ö¸¶¨±àºÅÊı¾İ°üµÄĞÅÏ¢
+    // è·å–æŒ‡å®šç¼–å·æ•°æ®åŒ…çš„ä¿¡æ¯
     if (allPackets.find(frameNumber) == allPackets.end()) {
-        std::cerr << "ÕÒ²»µ½±àºÅÎª " << frameNumber << " µÄÊı¾İ°ü" << std::endl;
+        //std::cerr << "æ‰¾ä¸åˆ°ç¼–å·ä¸º " << frameNumber << " çš„æ•°æ®åŒ…" << std::endl;
+		LOG_F(ERROR, "æ‰¾ä¸åˆ°ç¼–å·ä¸º %d çš„æ•°æ®åŒ…", frameNumber);
         return false;
     }
     std::shared_ptr<Packet> packet = allPackets[frameNumber];
 
 
-    // ´ò¿ªÎÄ¼ş£¨ÒÔ¶ş½øÖÆÄ£Ê½£©
+    // æ‰“å¼€æ–‡ä»¶ï¼ˆä»¥äºŒè¿›åˆ¶æ¨¡å¼ï¼‰
     std::ifstream file(currentFilePath, std::ios::binary);
     if (!file) {
-        std::cerr << "ÎŞ·¨´ò¿ªÎÄ¼ş: " << currentFilePath << std::endl;
+        //std::cerr << "æ— æ³•æ‰“å¼€æ–‡ä»¶: " << currentFilePath << std::endl;
+		LOG_F(ERROR, "æ— æ³•æ‰“å¼€æ–‡ä»¶: %s", currentFilePath.c_str());    
         return false;
     }
 
-    // ÒÆ¶¯µ½Ö¸¶¨Æ«ÒÆÎ»ÖÃ
+    // ç§»åŠ¨åˆ°æŒ‡å®šåç§»ä½ç½®
     file.seekg(packet->file_offset, std::ios::beg);
     if (!file) {
-        std::cerr << "seekg Ê§°Ü£¬Æ«ÒÆ¿ÉÄÜ³¬³öÎÄ¼ş´óĞ¡" << std::endl;
+        //std::cerr << "seekg å¤±è´¥ï¼Œåç§»å¯èƒ½è¶…å‡ºæ–‡ä»¶å¤§å°" << std::endl;
+		LOG_F(ERROR, "seekg å¤±è´¥ï¼Œåç§»å¯èƒ½è¶…å‡ºæ–‡ä»¶å¤§å°");
         return false;
     }
 
-    // ¶ÁÈ¡Êı¾İ
+    // è¯»å–æ•°æ®
     data.resize(packet->cap_len);
     file.read(reinterpret_cast<char*>(data.data()), packet->cap_len);
 

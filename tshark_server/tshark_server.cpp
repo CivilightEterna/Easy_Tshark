@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include "tshark_manager.h"
 #include "third_library/loguru/loguru.hpp"
 
@@ -15,13 +15,17 @@ int main(int argc, char* argv[]) {
 
     // 设置控制台环境编码为UTF-8格式，防止打印输出的内容乱码
     setlocale(LC_ALL, "zh_CN.UTF-8");
-
+	
     InitLog(argc, argv);
-
+	
     TsharkManager tsharkManager("E:/Easy_tshark/tshark_server/tshark_server");
-    tsharkManager.analysisFile("E:/capture.pcap");
+    /*tsharkManager.analysisFile("E:/capture.pcap");*/
+    std::vector<AdapterInfo>adaptors = tsharkManager.getNetworkAdapters();
+    for(auto item : adaptors) {
+        LOG_F(INFO, "网卡[%d]:name[%s] remark[%s]", item.id, item.name.c_str(), item.remark.c_str());
+	}
 
-    tsharkManager.printAllPackets();
+    //tsharkManager.printAllPackets();
 
     return 0;
 }

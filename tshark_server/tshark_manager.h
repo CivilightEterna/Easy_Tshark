@@ -25,18 +25,20 @@ class TsharkManager {
 public:
     TsharkManager(std::string workDir);
     ~TsharkManager();
+    //æšä¸¾ç½‘å¡
+    std::vector<AdapterInfo>getNetworkAdapters();
 
-    // ·ÖÎöÊı¾İ°üÎÄ¼ş
+    // åˆ†ææ•°æ®åŒ…æ–‡ä»¶
     bool analysisFile(std::string filePath);
 
-    // ´òÓ¡ËùÓĞÊı¾İ°üµÄĞÅÏ¢
+    // æ‰“å°æ‰€æœ‰æ•°æ®åŒ…çš„ä¿¡æ¯
     void printAllPackets();
 
-    // »ñÈ¡Ö¸¶¨±àºÅÊı¾İ°üµÄÊ®Áù½øÖÆÊı¾İ
+    // è·å–æŒ‡å®šç¼–å·æ•°æ®åŒ…çš„åå…­è¿›åˆ¶æ•°æ®
     bool getPacketHexData(uint32_t frameNumber, std::vector<unsigned char>& data);
 
 private:
-    // ½âÎöÃ¿Ò»ĞĞ
+    // è§£ææ¯ä¸€è¡Œ
     bool parseLine(std::string line, std::shared_ptr<Packet> packet);
 
 private:
@@ -44,10 +46,10 @@ private:
     std::string tsharkPath;
     IP2RegionUtil ip2RegionUtil;
 
-    // µ±Ç°·ÖÎöµÄÎÄ¼şÂ·¾¶
+    // å½“å‰åˆ†æçš„æ–‡ä»¶è·¯å¾„
     std::string currentFilePath;
 
-    // ·ÖÎöµÃµ½µÄËùÓĞÊı¾İ°üĞÅÏ¢£¬keyÊÇÊı¾İ°üID£¬valueÊÇÊı¾İ°üĞÅÏ¢Ö¸Õë£¬·½±ã¸ù¾İ±àºÅ»ñÈ¡Ö¸¶¨Êı¾İ°üĞÅÏ¢
+    // åˆ†æå¾—åˆ°çš„æ‰€æœ‰æ•°æ®åŒ…ä¿¡æ¯ï¼Œkeyæ˜¯æ•°æ®åŒ…IDï¼Œvalueæ˜¯æ•°æ®åŒ…ä¿¡æ¯æŒ‡é’ˆï¼Œæ–¹ä¾¿æ ¹æ®ç¼–å·è·å–æŒ‡å®šæ•°æ®åŒ…ä¿¡æ¯
     std::unordered_map<uint32_t, std::shared_ptr<Packet>> allPackets;
 };
 
