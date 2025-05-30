@@ -20,12 +20,23 @@ int main(int argc, char* argv[]) {
 	
     TsharkManager tsharkManager("E:/Easy_tshark/tshark_server/tshark_server");
     /*tsharkManager.analysisFile("E:/capture.pcap");*/
-    std::vector<AdapterInfo>adaptors = tsharkManager.getNetworkAdapters();
-    for(auto item : adaptors) {
-        LOG_F(INFO, "网卡[%d]:name[%s] remark[%s]", item.id, item.name.c_str(), item.remark.c_str());
-	}
-
-    //tsharkManager.printAllPackets();
+ //   std::vector<AdapterInfo>adaptors = tsharkManager.getNetworkAdapters();
+ //   for(auto item : adaptors) {
+ //       LOG_F(INFO, "网卡[%d]:name[%s] remark[%s]", item.id, item.name.c_str(), item.remark.c_str());
+	//}
+	tsharkManager.startCapture("WLAN");
+    //主线程进入命令等待停止抓包
+	std::string input;
+    while (true) {
+        std::cout << "输入q停止抓包: ";
+        std::cin >> input;
+        if (input == "q") {
+            tsharkManager.stopCapture();
+            LOG_F(INFO, "停止抓包成功！");
+            break;
+        }
+    }
+    tsharkManager.printAllPackets();
 
     return 0;
 }

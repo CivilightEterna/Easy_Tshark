@@ -40,9 +40,9 @@ std::vector<AdapterInfo>TsharkManager::getNetworkAdapters() {
 	int index = 1;
     while (std::getline(stream, line)) {
         //通过空格拆分字符
-		int startPos = line.find(' ');
+		size_t startPos = line.find(' ');
         if (startPos != std::string::npos) {
-            int endPos = line.find(' ', startPos + 1);
+            size_t endPos = line.find(' ', startPos + 1);
             std::string interfaceName;
             if (endPos != std::string::npos) {
 				interfaceName = line.substr(startPos + 1, endPos - startPos - 1);
@@ -183,10 +183,12 @@ bool TsharkManager::parseLine(std::string line, std::shared_ptr<Packet> packet) 
     std::string field;
     std::vector<std::string> fields;
 
-    while (std::getline(ss, field, '\t')) {  // 假设字段用 tab 分隔
-        fields.push_back(field);
+    size_t start = 0, end;
+    while ((end = line.find('\t', start)) != std::string::npos) {
+        fields.push_back(line.substr(start, end - start));
+        start = end + 1;
     }
-
+    fields.push_back(line.substr(start)); // 添加最后一个子串
     // 字段顺序：
     // 0: frame.number
     // 1: frame.time_epoch
@@ -263,4 +265,86 @@ bool TsharkManager::getPacketHexData(uint32_t frameNumber, std::vector<unsigned 
     file.read(reinterpret_cast<char*>(data.data()), packet->cap_len);
 
     return true;
+}
+//开始抓包
+bool TsharkManager::startCapture(std::string adapterName) {
+	LOG_F(INFO, "即将开始抓包，网卡: %s", adapterName.c_str());
+	//跨平台的线程安全问题，使用std::shared_ptr来管理线程对象  
+	captureWorkThread = std::make_shared<std::thread>(&TsharkManager::captureWorkerThreadEntry, this, "\"" +adapterName +"\"");
+    //初始化停止标志
+    stopFlag = false;
+	return true;
+}
+void TsharkManager::captureWorkerThreadEntry(std::string adapterName) {
+    std::string captureFile = "captrue.pcap";
+    std::vector<std::string>tsharkArgs = {
+        tsharkPath,
+        "-i", adapterName.c_str(),
+        "-w", captureFile,
+        "-F","pcap",
+        "-T", "fields",
+        "-e", "frame.number",
+        "-e", "frame.time_epoch",
+        "-e", "frame.len",
+        "-e", "frame.cap_len",
+        "-e", "eth.src",
+        "-e", "eth.dst",
+        "-e", "ip.src",
+        "-e", "ipv6.src",
+        "-e", "ip.dst",
+        "-e", "ipv6.dst",
+        "-e", "tcp.srcport",
+        "-e", "udp.srcport",
+        "-e", "tcp.dstport",
+        "-e", "udp.dstport",
+        "-e", "_ws.col.Protocol",
+        "-e", "_ws.col.Info",
+
+    };
+	std::string command;
+    for (auto arg : tsharkArgs) {
+        command += arg;
+		command += " ";
+    }
+	FILE* pipe = popen(command.c_str(), "r");
+    if (!pipe) {
+        LOG_F(ERROR, "无法运行 tshark 命令: %s", command.c_str());    
+		return;
+    }
+	char buffer[4096];
+	//当前处理的报文在文件中的偏移，第一个报文的偏移就是全局文件头24(也就是sizeof(PcapHeader))字节
+    uint32_t file_offset = sizeof(PcapHeader);
+    while (fgets(buffer, sizeof(buffer), pipe) != nullptr && !stopFlag) {
+        //在线采集的时候过滤额外的信息
+		std::string line(buffer);
+        if(line.find("Capturing on") != std::string::npos) {
+            continue; // 跳过捕获信息
+		}
+		std::shared_ptr<Packet>packet = std::make_shared<Packet>();
+        if (!parseLine(buffer, packet)) {
+            LOG_F(ERROR, buffer);
+			assert(false);
+        }
+    //计算当前报文的偏移，然后记录在Packet对象中
+        packet->file_offset = file_offset + sizeof(PacketHeader);
+        //更新偏移游标
+        file_offset = file_offset + sizeof(PacketHeader) + packet->cap_len;
+        //获取IP地理位置
+		packet->src_location = IP2RegionUtil::getIpLocation(packet->src_ip);
+        packet->dst_location = IP2RegionUtil::getIpLocation(packet->dst_ip);
+        //将分析的数据包插入保存起来
+		allPackets.insert(std::make_pair<>(packet->frame_number, packet));
+    }
+	pclose(pipe);
+	// 记录当前分析的文件路径
+    currentFilePath = captureFile;
+	/*LOG_F(INFO, "抓包完成，数据包总数：%d", allPackets.size());*/
+
+}
+//停止抓包
+bool TsharkManager::stopCapture() {
+    LOG_F(INFO, "即将停止抓包");
+	stopFlag = true;
+	captureWorkThread->join(); // 等待抓包线程结束
+	return true;
 }
