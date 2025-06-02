@@ -306,7 +306,8 @@ void TsharkManager::captureWorkerThreadEntry(std::string adapterName) {
         command += arg;
 		command += " ";
     }
-	FILE* pipe = popen(command.c_str(), "r");
+	//使用ProcessUtil::PopenEx来执行tshark命令，并捕获tshark的PID，防止无流量时tshark进程一直存在
+	FILE* pipe = ProcessUtil::PopenEx(command.c_str(), &captureTsharkPid);
     if (!pipe) {
         LOG_F(ERROR, "无法运行 tshark 命令: %s", command.c_str());    
 		return;
@@ -345,6 +346,7 @@ void TsharkManager::captureWorkerThreadEntry(std::string adapterName) {
 bool TsharkManager::stopCapture() {
     LOG_F(INFO, "即将停止抓包");
 	stopFlag = true;
+	ProcessUtil::Kill(captureTsharkPid); // 停止 tshark 进程
 	captureWorkThread->join(); // 等待抓包线程结束
 	return true;
 }

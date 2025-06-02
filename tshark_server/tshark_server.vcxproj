@@ -43,7 +43,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -136,6 +136,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ip2region_util.h" />
+    <ClInclude Include="misc_util.hpp" />
+    <ClInclude Include="process_util.hpp" />
     <ClInclude Include="third_library\httplib\httplib.h" />
     <ClInclude Include="third_library\ip2region\xdb_bench.h" />
     <ClInclude Include="third_library\ip2region\xdb_search.h" />

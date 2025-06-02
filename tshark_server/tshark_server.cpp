@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
  //   for(auto item : adaptors) {
  //       LOG_F(INFO, "网卡[%d]:name[%s] remark[%s]", item.id, item.name.c_str(), item.remark.c_str());
 	//}
-	tsharkManager.startCapture("WLAN");
+	tsharkManager.startCapture("蓝牙网络连接");
     //主线程进入命令等待停止抓包
 	std::string input;
     while (true) {

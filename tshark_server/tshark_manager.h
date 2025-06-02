@@ -1,7 +1,3 @@
-//
-// Created by xuanyuan on 2025/2/16.
-//
-
 #ifndef TSHARKMANAGER_H
 #define TSHARKMANAGER_H
 #include "tshark_datatype.h"
@@ -20,7 +16,7 @@
 #include <fstream>
 #include <unordered_map>
 #include <thread>
-
+#include "process_util.hpp"
 class TsharkManager {
 
 public:
@@ -40,7 +36,7 @@ public:
 public:
     //开始抓包
     bool startCapture(std::string adapterName);
-	// 停止抓包
+    // 停止抓包
     bool stopCapture();
 
 private:
@@ -59,11 +55,13 @@ private:
     std::unordered_map<uint32_t, std::shared_ptr<Packet>> allPackets;
 private:
     //在线采集数据包的工作进程
-	void captureWorkerThreadEntry(std::string adapterName);
+    void captureWorkerThreadEntry(std::string adapterName);
     //在线分析线程captureWorkThread 是用来保存和管理抓包线程的成员变量，保证抓包任务可以在后台独立运行，并且可以被安全地控制和释放
     std::shared_ptr<std::thread>captureWorkThread;
-	//是否停止抓包的标记
-	bool stopFlag;   
+    //是否停止抓包的标记
+    bool stopFlag;
+    // 在线抓包的tshark进程PID
+    PID_T captureTsharkPid;
 };
 
 

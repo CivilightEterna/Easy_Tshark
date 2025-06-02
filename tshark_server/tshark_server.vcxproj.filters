@@ -188,6 +188,12 @@
     <ClInclude Include="ip2region_util.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="process_util.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="misc_util.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="third_library\ip2region\ip2region.xdb" />
