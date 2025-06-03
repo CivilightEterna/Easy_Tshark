@@ -17,6 +17,8 @@
 #include <unordered_map>
 #include <thread>
 #include "process_util.hpp"
+#include <map>
+#include <mutex>
 class TsharkManager {
 
 public:
@@ -33,6 +35,14 @@ public:
 
     // 获取指定编号数据包的十六进制数据
     bool getPacketHexData(uint32_t frameNumber, std::vector<unsigned char>& data);
+
+    // 开始监控所有网卡流量统计数据
+    void startMonitorAdaptersFlowTrend();
+	void adapterFlowTrendMonitorThreadEntry(std::string adapterName);
+    //停止监控所有网卡流量统计数据
+    void stopMonitorAdaptersFlowTrend();
+	//获取所有网卡流量统计数据
+	void getAdaptersFlowTrendData(std::map<std::string,std::map<long,long>>&flowTrendData);
 public:
     //开始抓包
     bool startCapture(std::string adapterName);
@@ -62,6 +72,28 @@ private:
     bool stopFlag;
     // 在线抓包的tshark进程PID
     PID_T captureTsharkPid;
+    // -----------------------------以下与网卡流量趋势监控有关-----------------------------------
+    // 网卡监控相关的信息
+    class AdapterMonitorInfo {
+    public:
+        AdapterInfo adapterInfo() {
+			monitorTsharkPipe = nullptr;
+            tsharkPid = 0;
+        }
+		std::string adapterName; // 网卡名称
+		std::map<long, long>flowTrendDtata;// 网卡流量趋势数据，key是时间戳，value是流量大小
+		std::shared_ptr<std::thread>monitorThread;// 网卡监控线程
+		FILE* monitorTsharkPipe; // tshark管道
+		PID_T tsharkPid; //tshark进程PID
+    };
+
+    // 后台流量趋势监控信息
+    std::map<std::string, AdapterMonitorInfo> adapterFlowTrendMonitorMap;
+
+    // 访问上面流量趋势数据的锁
+    std::recursive_mutex adapterFlowTrendMapLock;
+    // 网卡流量监控的开始时间
+    long adapterFlowTrendMonitorStartTime = 0;
 };
 
 
