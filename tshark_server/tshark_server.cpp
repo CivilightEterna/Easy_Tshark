@@ -1,6 +1,34 @@
 #include <iostream>
 #include "tshark_manager.h"
 #include "third_library/loguru/loguru.hpp"
+static void ReadPkgGetXML2JSON(TsharkManager &tsharkManager) {
+	std::string jsonString;
+	std::string pcapFilePath;
+	int frameTotalNumber;
+	int frameNumber = 0;
+	std::cout << "请输入pcap文件路径: " << std::endl;
+	std::cin >> pcapFilePath;
+	tsharkManager.analysisFile(pcapFilePath);
+	frameTotalNumber = tsharkManager.getPacketsNum();
+	std::cout << "请输入要获取数据包的序号(1-" << frameTotalNumber << "): " << std::endl;
+	std::cin >> frameNumber;
+	if(frameNumber < 1 || frameNumber > frameTotalNumber) {
+		LOG_F(ERROR, "输入的包序号不合法，请输入1-%d之间的数字", frameTotalNumber);
+		return;
+	}
+	else {
+		tsharkManager.getPacketDetailInfo(frameNumber, jsonString);
+		std::string fileName = std::to_string(frameTotalNumber) + ".json";
+		std::ofstream outFile(fileName);
+		if (outFile.is_open()) {
+			outFile << jsonString;
+			outFile.close();
+			LOG_F(INFO, "数据包详情已保存到文件: %s", fileName.c_str());
+		} else {
+			LOG_F(ERROR, "无法打开文件 %s 进行写入", fileName.c_str());
+		}
+	}
+}
 
 void InitLog(int argc, char* argv[]) {
     // 初始化 Loguru
@@ -68,9 +96,6 @@ int main(int argc, char* argv[]) {
 	//resDoc.Accept(writer);
 	//LOG_F(INFO, "网卡流量趋势数据: %s", buffer.GetString());
 	tsharkManager.analysisFile("E:/capture.pcap");
-	std::string packetDetailJson;
-	tsharkManager.getPacketDetailInfo(10, packetDetailJson);
-
-	LOG_F(INFO, "第10个包的协议树为：%s", packetDetailJson.c_str());
+	ReadPkgGetXML2JSON(tsharkManager);
     return 0;
 }

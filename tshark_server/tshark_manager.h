@@ -59,8 +59,8 @@ public:
     void clearFlowTrendData();
 	//获取指定数据包的详细信息
     bool getPacketDetailInfo(uint32_t frameNumber,std::string &result);
-	// 获取指定数据包的IP地址信息
-	void processPcapFile();
+    int getPacketsNum();
+
 
 private:
 

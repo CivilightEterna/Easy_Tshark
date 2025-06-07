@@ -595,7 +595,7 @@ bool TsharkManager::getPacketDetailInfo(uint32_t frameNumber, std::string& resul
 
     return true;
 }
-void TsharkManager::processPcapFile() {
-	std::cout << "Processing pcap file..." << std::endl;
-	std::string pcapFilePath = MiscUtil::getIntputString();
+//获取数据包总数
+int TsharkManager::getPacketsNum(){
+    return static_cast<int>(allPackets.size());
 }
