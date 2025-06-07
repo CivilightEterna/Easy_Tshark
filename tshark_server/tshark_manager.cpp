@@ -16,6 +16,7 @@
 
 TsharkManager::TsharkManager(std::string workDir) {
     this->tsharkPath = "D:/wireshark/tshark";
+    this->editcapPath = "D:/wireshark/editcap";
     std::string xdbPath = workDir + "/third_library/ip2region/ip2region.xdb";
     IP2RegionUtil::init(xdbPath);
 }
@@ -70,7 +71,6 @@ bool TsharkManager::analysisFile(std::string filePath) {
             LOG_F(ERROR, buffer);
             assert(false); // 增加错误断言，及时发现错误
         }
-
         // 计算当前报文的偏移，然后记录在Packet对象中
         packet->file_offset = file_offset + sizeof(PacketHeader);
 
@@ -163,18 +163,12 @@ void TsharkManager::captureWorkThreadEntry(std::string adapterName) {
     // 当前处理的报文在文件中的偏移，第一个报文的偏移就是全局文件头24(也就是sizeof(PcapHeader))字节
     uint32_t file_offset = sizeof(PcapHeader);
     while (fgets(buffer, sizeof(buffer), pipe) != nullptr && !stopFlag) {
-
         std::string line = buffer;
         if (line.find("Capturing on") != std::string::npos) {
             continue;
         }
 
         std::shared_ptr<Packet> packet = std::make_shared<Packet>();
-        if (!parseLine(line, packet)) {
-            LOG_F(ERROR, buffer);
-            assert(false);
-        }
-
         // 计算当前报文的偏移，然后记录在Packet对象中
         packet->file_offset = file_offset + sizeof(PacketHeader);
 
@@ -242,7 +236,6 @@ bool TsharkManager::parseLine(std::string line, std::shared_ptr<Packet> packet) 
     if (line.back() == '\n') {
         line.pop_back();
     }
-
     std::stringstream ss(line);
     std::string field;
     std::vector<std::string> fields;
@@ -331,7 +324,7 @@ bool TsharkManager::getPacketHexData(uint32_t frameNumber, std::vector<unsigned 
 
 std::vector<AdapterInfo> TsharkManager::getNetworkAdapters() {
     // 需要过滤掉的虚拟网卡
-    std::set<std::string> specialInterfaces = { "sshdump", "ciscodump", "udpdump", "randpkt","etwdump"};
+    std::set<std::string> specialInterfaces = { "sshdump", "ciscodump", "udpdump", "randpkt" };
     std::vector<AdapterInfo> interfaces;
     char buffer[256] = { 0 };
     std::string result;
@@ -547,4 +540,62 @@ void TsharkManager::adapterFlowTrendMonitorThreadEntry(std::string adapterName) 
     }
 
     LOG_F(INFO, "adapterFlowTrendMonitorThreadEntry 已结束");
+}
+
+
+
+// 获取指定数据包的详情内容
+bool TsharkManager::getPacketDetailInfo(uint32_t frameNumber, std::string& result) {
+
+    // 先通过editcap将这一帧数据包从文件中摘出来，然后再获取详情，这样会快一些
+    std::string tmpFilePath = MiscUtil::getDefaultDataDir() + MiscUtil::getRandomString(10) + ".pcap";
+    std::string splitCmd = editcapPath + " -r " + currentFilePath + " " + tmpFilePath + " " + std::to_string(frameNumber) + "-" + std::to_string(frameNumber);
+    if (!ProcessUtil::Exec(splitCmd)) {
+        LOG_F(ERROR, "Error in executing command: %s", splitCmd.c_str());
+        remove(tmpFilePath.c_str());
+        return false;
+    }
+
+    // 通过tshark获取指定数据包详细信息，输出格式为XML
+    // 启动'tshark -r ${currentFilePath} -T pdml'命令，获取指定数据包的详情
+    std::string cmd = tsharkPath + " -r " + tmpFilePath + " -T pdml";
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(ProcessUtil::PopenEx(cmd.c_str()), pclose);
+    if (!pipe) {
+        std::cout << "Failed to run tshark command." << std::endl;
+        remove(tmpFilePath.c_str());
+        return false;
+    }
+
+    // 读取tshark输出
+    char buffer[8192] = { 0 };
+    std::string tsharkResult;
+    setvbuf(pipe.get(), NULL, _IOFBF, sizeof(buffer));
+    int count = 0;
+    while (fgets(buffer, sizeof(buffer) - 1, pipe.get()) != nullptr) {
+        tsharkResult += buffer;
+        memset(buffer, 0, sizeof(buffer));
+    }
+
+    remove(tmpFilePath.c_str());
+
+    // 将xml内容转换为JSON
+    rapidjson::Document detailJson;
+    if (!MiscUtil::xml2JSON(tsharkResult, detailJson)) {
+        LOG_F(ERROR, "XML转JSON失败");
+        return false;
+    }
+
+    // 序列化为 JSON 字符串
+    rapidjson::StringBuffer stringBuffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(stringBuffer);
+    detailJson.Accept(writer);
+
+    // 设置数据包详情结果
+    result = stringBuffer.GetString();
+
+    return true;
+}
+void TsharkManager::processPcapFile() {
+	std::cout << "Processing pcap file..." << std::endl;
+	std::string pcapFilePath = MiscUtil::getIntputString();
 }

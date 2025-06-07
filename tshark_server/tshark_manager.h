@@ -57,6 +57,10 @@ public:
 
     // 清空流量监控数据
     void clearFlowTrendData();
+	//获取指定数据包的详细信息
+    bool getPacketDetailInfo(uint32_t frameNumber,std::string &result);
+	// 获取指定数据包的IP地址信息
+	void processPcapFile();
 
 private:
 
@@ -72,6 +76,7 @@ private:
 private:
 
     std::string tsharkPath;
+    std::string editcapPath;
 
     // 在线分析线程
     std::shared_ptr<std::thread> captureWorkThread;
